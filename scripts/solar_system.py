@@ -106,7 +106,7 @@ class SolarSystem:
 
         self.data = np_pixels
 
-        # Create an image using Pillow and save it
+        # Save the image to disk
         path = self.path + "\\view\\"
         filename = path + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".png"
         img = Image.fromarray(np_pixels, 'RGBA')
