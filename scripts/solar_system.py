@@ -1,3 +1,4 @@
+import os
 import math
 import datetime
 import bpy
@@ -43,6 +44,9 @@ class SolarSystem:
         # Keyframe parameters
         self.frame_no = 0
         self.frame_step = 5
+        
+        # Get path of the blender file
+        self.path = os.getcwd()
 
     def iterate(self):
         """
@@ -54,7 +58,7 @@ class SolarSystem:
         self.dir_y = direction[1]
 
         if self.dir_x == "CENTER" and self.dir_y == "CENTER":
-            # Base case--we've reached goal orientation
+            # Base case - we've reached goal orientation
             return
 
         if self.dir_x == "RIGHT":
@@ -66,18 +70,18 @@ class SolarSystem:
         if self.dir_y == "UP":
             self._increase_tilt()
 
-            # Generate keyframes
-            self.frame_no += self.frame_step
-            bpy.data.objects['motor_tilt'].keyframe_insert(
-                data_path="rotation_euler",
-                index=1,
-                frame=self.frame_no
-            )
-            bpy.data.objects['motor_rotate'].keyframe_insert(
-                data_path="rotation_euler",
-                index=2,
-                frame=self.frame_no
-            )
+        # Generate keyframes
+        self.frame_no += self.frame_step
+        bpy.data.objects['motor_tilt'].keyframe_insert(
+            data_path="rotation_euler",
+            index=1,
+            frame=self.frame_no
+        )
+        bpy.data.objects['motor_rotate'].keyframe_insert(
+            data_path="rotation_euler",
+            index=2,
+            frame=self.frame_no
+        )
 
     def _update_sensor(self):
         """
@@ -87,7 +91,7 @@ class SolarSystem:
         # Render image and get pixels
         self.scene.view_layers["ViewLayer"].update()  # Ensure the view layer is up-to-date
         bpy.context.scene.frame_set(self.frame_no)  # Make sure we're on the current frame
-        bpy.ops.render.render(write_still=True)
+        bpy.ops.render.render(write_still=False)
         pixels = bpy.data.images['Viewer Node'].pixels
 
         # Get the dimensions of the image
@@ -103,7 +107,7 @@ class SolarSystem:
         self.data = np_pixels
 
         # Create an image using Pillow and save it
-        path = "C:/Users/johan/Desktop/SolarTracker/view/"
+        path = self.path + "\\view\\"
         filename = path + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".png"
         img = Image.fromarray(np_pixels, 'RGBA')
         img.save(filename)
@@ -116,12 +120,12 @@ class SolarSystem:
         self.image = cv2.cvtColor(self.data, cv2.COLOR_RGBA2BGR)
         self.gray = cv2.cvtColor(self.data, cv2.COLOR_RGBA2GRAY)
         (_, _, _, max_loc) = cv2.minMaxLoc(self.gray)
-        cv2.circle(self.image, max_loc, 5, (255, 0, 255), 1)
-        cv2.line(self.image, (self.center, 0), (self.center, self.res_x), (255, 0, 255), 1)
-        cv2.line(self.image, (0, self.center), (self.res_x, self.center), (255, 0, 255), 1)
+        cv2.circle(self.image, max_loc, 5, (14, 94, 233), 1)
+        cv2.line(self.image, (self.center, 0), (self.center, self.res_x), (14, 94, 233), 1)
+        cv2.line(self.image, (0, self.center), (self.res_x, self.center), (14, 94, 233), 1)
 
         # Create an image using Pillow and save it
-        path = "C:/Users/johan/Desktop/SolarTracker/cv/"
+        path = self.path + "\\cv\\"
         filename = path + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".png"
         cv2.imwrite(filename, self.image)
 
@@ -140,7 +144,8 @@ class SolarSystem:
 
         if self.center - self.t < max_loc[1] < self.center + self.t:
             dir_y = "CENTER"
-
+        
+        print(dir_x, dir_y)
         return (dir_x, dir_y)
 
     def _increase_tilt(self):
